@@ -1,23 +1,30 @@
 {
-  "name": "devweb-tp5",
+  "name": "devweb-tp6",
   "version": "1.0.0",
   "type": "module",
-  "main": "server-http.mjs",
+  "main": "server.mjs",
   "scripts": {
-    "http-dev": "cross-env NODE_ENV=development nodemon server-http.mjs",
-    "http-prod": "cross-env NODE_ENV=production node server-http.mjs",
-    "express-dev": "cross-env NODE_ENV=development nodemon server-express.mjs",
-    "express-prod": "cross-env NODE_ENV=production node server-express.mjs"
+    "dev": "cross-env NODE_ENV=development nodemon server.mjs",
+    "prod": "cross-env NODE_ENV=production node server.mjs",
+    "lint": "npx eslint . --ext .mjs",
+    "format": "npx prettier --write \"**/*.mjs\" \"**/*.js\" \"**/*.json\" \"**/*.yaml\" \"**/*.yml\" \"**/*.ejs\""
   },
   "dependencies": {
-    "cross-env": "^7.0.3",
-    "express": "^4.21.1",
+    "better-sqlite3": "^8.4.0",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
     "http-errors": "^2.0.0",
-    "loglevel": "^1.9.1",
+    "loglevel": "^1.8.1",
     "morgan": "^1.10.0",
-    "ejs": "^3.1.9"
+    "nanoid": "^4.0.0",
+    "sql.js": "^1.13.0",
+    "swagger-ui-express": "^4.6.3",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "cross-env": "^7.0.3",
+    "eslint": "^8.39.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8"
   }
 }
