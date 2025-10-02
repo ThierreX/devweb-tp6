@@ -3,7 +3,7 @@
 
 Question 1.1 :
 
-I'l y'a une en-tête celle-ci : response.end("<html><h1>My first server!<h1></html>");
+I'l y'a une en-tête celle-ci : response.end("<html><h1>My first server!</h1></html>");
 Dans l'en-tête de la page il y'a uniquement le style
 
 Question 1.2 :
