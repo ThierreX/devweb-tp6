@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Erreur</title>
+  </head>
+  <body>
+    <h1>Erreur <%= code %></h1>
+    <p><%= message %></p>
+    <% if (stack) { %>
+      <pre><%= stack %></pre>
+    <% } %>
+  </body>
+</html>
