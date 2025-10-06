@@ -13,7 +13,7 @@
     "prod": "cross-env NODE_ENV=production node server.mjs",
     "lint": "npx eslint . --ext .mjs",
     "format": "npx prettier --write \"**/*.mjs\" \"**/*.js\" \"**/*.json\" \"**/*.yaml\" \"**/*.yml\" \"**/*.ejs\"",
-    "start": "npm run dev"
+    "start": "npm run prod"
   },
 
   "dependencies": {
