@@ -3,12 +3,19 @@
   "version": "1.0.0",
   "type": "module",
   "main": "server.mjs",
+
+    "engines": {
+    "node": "20.x"
+  },
+  
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon server.mjs",
     "prod": "cross-env NODE_ENV=production node server.mjs",
     "lint": "npx eslint . --ext .mjs",
-    "format": "npx prettier --write \"**/*.mjs\" \"**/*.js\" \"**/*.json\" \"**/*.yaml\" \"**/*.yml\" \"**/*.ejs\""
+    "format": "npx prettier --write \"**/*.mjs\" \"**/*.js\" \"**/*.json\" \"**/*.yaml\" \"**/*.yml\" \"**/*.ejs\"",
+    "start": "npm run prod"
   },
+
   "dependencies": {
     "better-sqlite3": "^8.4.0",
     "ejs": "^3.1.9",
