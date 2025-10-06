@@ -32,7 +32,7 @@ app.set("view engine", "ejs");
 app.set("views", path.resolve("views"));
 
 // static middleware (serve static files from static/)
-app.use(express.static(path.resolve("static")));
+app.use(express.static(path.resolve("static"), { index: false }));
 
 // swagger / open api
 let swaggerEnabled = false;
