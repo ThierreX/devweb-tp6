@@ -8,7 +8,6 @@ import swaggerUi from "swagger-ui-express";
 import config from "./config.mjs";
 import apiV1 from "./router/api-v1.mjs";
 import apiV2 from "./router/api-v2.mjs";
-import createError from "http-errors";
 
 logger.setLevel(config.isDev ? logger.levels.DEBUG : logger.levels.WARN);
 
@@ -32,14 +31,12 @@ app.set("view engine", "ejs");
 app.set("views", path.resolve("views"));
 
 // static middleware (serve static files from static/)
-app.use(express.static(path.resolve("static"), { index: false }));
+app.use(express.static(path.resolve("static")));
 
 // swagger / open api
-let swaggerEnabled = false;
 if (fs.existsSync("static/open-api.yaml")) {
   const swaggerSpec = YAML.load("static/open-api.yaml");
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  swaggerEnabled = true;
 }
 
 // mount routers
@@ -47,17 +44,10 @@ app.use("/api-v1", apiV1);
 app.use("/api-v2", apiV2);
 
 // legacy: route root to API v2 homepage
-app.get("/", (req, res) => {
-  if (swaggerEnabled) {
-    // redirige vers Swagger UI si présent
-    res.redirect("/api-docs");
-  } else {
-    // sinon affiche un message d’accueil simple
-    res.send("Bienvenue sur mon API 🚀 (v2 disponible sur /api-v2)");
-  }
-});
+app.get("/", (req, res) => res.redirect("/api-v2/"));
 
 // default 404 handler -> convert to http-error
+import createError from "http-errors";
 app.use((req, res, next) => next(createError(404)));
 
 // error handler that renders error.ejs

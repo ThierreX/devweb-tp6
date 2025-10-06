@@ -1,5 +1,3 @@
-/// LIEN RENDER : https://devweb-tp6-1.onrender.com/api-docs ///
-
 Question 1 :
 
 La commande httpie équivalente est :
