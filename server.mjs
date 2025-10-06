@@ -65,6 +65,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-const server = app.listen(port, host, () =>
-  logger.info(`HTTP listening on http://${host}:${port} (${config.env})`)
+const PORT = process.env.PORT || port || 3000;
+const HOST = '0.0.0.0';
+
+const server = app.listen(PORT, HOST, () => 
+  logger.info(`HTTP listening on http://${HOST}:${PORT} (${config.env})`)
 );
