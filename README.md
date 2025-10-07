@@ -1,8 +1,8 @@
-////////URL DU RENDER DU RACCOURCISSEUR D'URL////////
+////////URL de déploiement Render////////
 
 https://devweb-tp6-omgq.onrender.com
 
-////////URL DU RENDER DU RACCOURCISSEUR D'URL////////
+////////URL de déploiement Render////////
 
 
 
@@ -98,4 +98,5 @@ la pile d’erreur (stack) est affichée dans error.ejs.
 seule l’erreur et son code sont affichés (pas de stack).
 
 ///////////////////// devweb-TP6 /////////////////////
+
 
