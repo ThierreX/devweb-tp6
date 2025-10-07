@@ -1,82 +1,83 @@
 import express from "express";
 import morgan from "morgan";
+import logger from "loglevel";
 import path from "node:path";
-import helmet from "helmet";
-import cors from "cors";
-import config from "./config.mjs";
-import apiV1Router from "./router/api-v1.mjs";
-import apiV2Router from "./router/api-v2.mjs";
 import fs from "node:fs";
+import YAML from "yamljs";
+import swaggerUi from "swagger-ui-express";
+import config from "./config.mjs";
+import apiV1 from "./router/api-v1.mjs";
+import apiV2 from "./router/api-v2.mjs";
+import createError from "http-errors";
+
+logger.setLevel(config.isDev ? logger.levels.DEBUG : logger.levels.WARN);
 
 const app = express();
+const host = "localhost";
+const port = config.PORT;
 
-app.set("view engine", "ejs");
-app.set("views", path.join(process.cwd(), "views"));
+// disable X-Powered-By header
+app.disable("x-powered-by");
 
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-if (app.get("env") === "development") app.use(morgan("dev"));
-
-app.use(express.static("static"));
-
-app.use("/api-v1", apiV1Router);
-app.use("/api-v2", apiV2Router);
-
-app.get("/", (req, res) => {
-  res.render("root", { created: null, error: null, message: null });
+// middleware to add X-API-version header
+app.use((req, res, next) => {
+  res.setHeader("X-API-version", "1.0.0");
+  next();
 });
 
-import { getLinkByShort, incrementVisit } from "./database/database.mjs";
+if (config.isDev) app.use(morgan("dev"));
 
-app.get("/:short", (req, res, next) => {
-  const short = req.params.short;
-  const link = getLinkByShort(short);
-  if (!link) return res.status(404).send("Not Found");
+// view engine
+app.set("view engine", "ejs");
+app.set("views", path.resolve("views"));
 
+// static middleware (serve static files from static/)
+app.use(express.static(path.resolve("static"), { index: false }));
+
+// swagger / open api
+let swaggerEnabled = false;
+if (fs.existsSync("static/open-api.yaml")) {
+  const swaggerSpec = YAML.load("static/open-api.yaml");
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  swaggerEnabled = true;
+}
+
+// mount routers
+app.use("/api-v1", apiV1);
+app.use("/api-v2", apiV2);
+
+// legacy: route root to API v2 homepage
+app.get("/", (req, res) => {
+  if (swaggerEnabled) {
+    // redirige vers Swagger UI si présent
+    res.redirect("/api-docs");
+  } else {
+    // sinon affiche un message d’accueil simple
+    res.send("Bienvenue sur mon API 🚀 (v2 disponible sur /api-v2)");
+  }
+});
+
+// default 404 handler -> convert to http-error
+app.use((req, res, next) => next(createError(404)));
+
+// error handler that renders error.ejs
+app.use((err, req, res, next) => {
+  logger.debug("error middleware", err && err.stack);
+  const status = err.status ?? 500;
+  const stack = config.isDev ? err.stack : "";
+  const payload = { code: status, message: err.message ?? "Internal Error", stack };
+  // if client accepts html, render template
+  res.status(status);
   res.format({
-    "application/json": () => {
-      res.json({
-        short: link.short,
-        url: link.url,
-        created: link.created,
-        visits: link.visits
-      });
-    },
-    "text/html": () => {
-      incrementVisit(short);
-      return res.redirect(link.url);
-    },
-    default: () => {
-      res.status(406).send("Not Acceptable");
-    }
+    "application/json": () => res.json({ code: payload.code, message: payload.message }),
+    "text/html": () => res.render("error", payload),
+    default: () => res.send(payload.message)
   });
 });
 
+const PORT = process.env.PORT || port || 3000;
+const HOST = '0.0.0.0';
 
-app.get("/error", () => {
-  throw new Error("Internal test error");
-});
-
-
-app.use((err, req, res, next) => {
-  console.error(err && err.stack ? err.stack : err);
-  res.status(500).json({ error: "internal_server_error", message: String(err) });
-});
-
-//script de nettoyage
-import db from "./database/database.mjs";
-
-const info = db.prepare(`
-  DELETE FROM links
-  WHERE short IS NULL OR short = '' OR url IS NULL OR url = '';
-`).run();
-
-if (info.changes > 0) {
-  console.log(`🧹 Nettoyage : ${info.changes} entrées invalides supprimées.`);
-}
-
-app.listen(config.port, () => {
-  console.info(`Server running on ${config.baseUrl}`);
-});
+const server = app.listen(PORT, HOST, () => 
+  logger.info(`HTTP listening on http://${HOST}:${PORT} (${config.env})`)
+);

@@ -1,81 +1,55 @@
-import fs from "node:fs";
 import Database from "better-sqlite3";
+import fs from "node:fs";
+import path from "node:path";
 import config from "../config.mjs";
 
-const dbPath = config.dbFile;
-const schemaPath = config.dbSchema;
+const DB_FILE = config.DB_FILE;
+const DB_SCHEMA = config.DB_SCHEMA;
 
 function ensureDatabase() {
-  const dir = dbPath.replace(/\/[^/]+$/, "");
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const db = new Database(dbPath);
-  if (fs.existsSync(schemaPath)) {
-    const sql = fs.readFileSync(schemaPath, "utf8");
+  const dbDir = path.dirname(DB_FILE);
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+
+  const db = new Database(DB_FILE);
+  // create schema if schema file exists
+  if (fs.existsSync(DB_SCHEMA)) {
+    const sql = fs.readFileSync(DB_SCHEMA, "utf8");
     db.exec(sql);
-  } else {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS links (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        short TEXT UNIQUE NOT NULL,
-        url TEXT NOT NULL,
-        created TEXT NOT NULL,
-        visits INTEGER NOT NULL DEFAULT 0,
-        token TEXT NOT NULL
-      );
-    `);
   }
   return db;
 }
 
 const db = ensureDatabase();
 
-export function createLink({ short, url, token }) {
-  const created = new Date().toISOString();
+export function getCount() {
+  const row = db.prepare("SELECT COUNT(*) as c FROM links").get();
+  return row?.c ?? 0;
+}
+
+export function createLink({ short, url, secret }) {
+  const now = new Date().toISOString();
   const stmt = db.prepare(
-    `INSERT INTO links (short, url, created, visits, token) VALUES (?, ?, ?, 0, ?)`
+    `INSERT INTO links (short, url, created_at, visits, secret) VALUES (?, ?, ?, 0, ?)`
   );
-  const info = stmt.run(short, url, created, token);
-  return { id: info.lastInsertRowid, short, url, created, visits: 0, token };
+  const info = stmt.run(short, url, now, secret ?? null);
+  return { id: info.lastInsertRowid, short, url, created_at: now, visits: 0, secret };
 }
 
-export function getLinkByShort(short) {
-  const stmt = db.prepare(`SELECT * FROM links WHERE short = ?`);
-  return stmt.get(short);
+export function findByShort(short) {
+  return db.prepare("SELECT * FROM links WHERE short = ?").get(short);
 }
 
-export function getLinkByUrl(url) {
-  const stmt = db.prepare(`SELECT * FROM links WHERE url = ?`);
-  return stmt.get(url);
-}
-
-export function countLinks() {
-  const row = db.prepare(`SELECT COUNT(*) as c FROM links`).get();
-  return row ? row.c : 0;
-}
-
-export function incrementVisit(short) {
-  const stmt = db.prepare(`UPDATE links SET visits = visits + 1 WHERE short = ?`);
+export function incrementVisits(short) {
+  const stmt = db.prepare("UPDATE links SET visits = visits + 1 WHERE short = ?");
   const info = stmt.run(short);
-  if (info.changes) {
-    return db.prepare(`SELECT * FROM links WHERE short = ?`).get(short);
-  }
-  return null;
+  return info.changes > 0;
 }
 
-export function deleteLink(short, token) {
-  const stmt = db.prepare(`SELECT * FROM links WHERE short = ?`);
-  const link = stmt.get(short);
-  if (!link) return { ok: false, why: "not_found" };
-  if (link.token !== token) return { ok: false, why: "forbidden" };
-
-  const del = db.prepare(`DELETE FROM links WHERE short = ?`);
-  const info = del.run(short);
-  return { ok: info.changes > 0 };
+export function deleteIfSecretMatches(short, secret) {
+  const row = findByShort(short);
+  if (!row) return { ok: false, code: 404 };
+  if (!secret) return { ok: false, code: 401 };
+  if (row.secret !== secret) return { ok: false, code: 403 };
+  const info = db.prepare("DELETE FROM links WHERE short = ?").run(short);
+  return { ok: info.changes > 0, code: 200 };
 }
-
-export function getLinkByToken(token) {
-  const stmt = db.prepare(`SELECT * FROM links WHERE token = ?`);
-  return stmt.get(token);
-}
-
-export default db;
