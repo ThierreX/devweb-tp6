@@ -74,9 +74,14 @@ const info = db.prepare(`
 `).run();
 
 if (info.changes > 0) {
-  console.log(`🧹 Nettoyage : ${info.changes} entrées invalides supprimées.`);
+  console.log(` Nettoyage : ${info.changes} entrées invalides supprimées.`);
 }
+//
 
-app.listen(config.port, () => {
-  console.info(`Server running on ${config.baseUrl}`);
+const PORT = process.env.PORT || config.port || 3000;
+const BASE_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+
+
+app.listen(PORT, () => {
+  console.info(` Server running on ${BASE_URL}`);
 });
