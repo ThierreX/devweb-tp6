@@ -2,8 +2,7 @@ CREATE TABLE IF NOT EXISTS links (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   short TEXT UNIQUE NOT NULL,
   url TEXT NOT NULL,
-  created_at TEXT NOT NULL,
+  created TEXT NOT NULL,
   visits INTEGER NOT NULL DEFAULT 0,
-  secret TEXT
+  token TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_short ON links(short);
