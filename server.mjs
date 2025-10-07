@@ -78,10 +78,10 @@ if (info.changes > 0) {
 }
 //
 
-const PORT = process.env.PORT || config.port || 3000;
+const PORT = process.env.PORT ? Number(process.env.PORT) : (config.port || 3000);
 const BASE_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
 
-app.listen(PORT, () => {
-  console.info(` Server running on ${BASE_URL}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.info(`Server running on ${BASE_URL} (port ${PORT})`);
 });
