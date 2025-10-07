@@ -8,7 +8,7 @@
     "prod": "cross-env NODE_ENV=production node server.mjs",
     "lint": "eslint . --ext .mjs",
     "build": "npm rebuild better-sqlite3 --build-from-source",
-    "start": "npm rebuild better-sqlite3 --build-from-source && node server.mjs"
+    "start": "npm run build && node server.mjs"
   },
   "engines": {
     "node": "22.x"
